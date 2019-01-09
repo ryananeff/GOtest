@@ -44,41 +44,39 @@ See output of function \code{GOtest}.
 }
 \seealso{\code{\link{GOtest}}, \code{\link{plotOverlap}}, \code{\link{p.adjust}}, \code{\link{GSEA}}}
 \examples{
-\dontrun{
+###Example usage 2: weighted enrichment tests
 
-#load approved symbols for protein-coding genes by HGNC;
-#these will be the gene universe for the present toy example analysis
-universe=curated.genesets(c('HGNC_universe'))$genesets[[1]]
-n=length(universe)
+#We will again make use of the MacArthur gene set and the gene universe of HGNC approved symbols, so make sure they have been loaded as in Example 1.
 
-###
-# Example case 1
-#
-#load 23 functional gene sets curated by the MacArthur's Lab
-MacArthur=curated.genesets(c('MacArthur'))$genesets
-#Since variable MacArthur is a list, it needs to be converted to a data.frame
-MacArthur.df=data.frame(Gene = unlist(MacArthur), Category = rep(names(MacArthur), sapply(MacArthur, length)))
+library(GOtest)
+MAGenes=curated.genesets(c('MacArthur'))
+universe=curated.genesets(c('HGNC_universe'))$Gene
+(n=length(universe))
 
-#Test whether the MacArthur curated gene sets are enriched in MSigDB gene ontology collections using hypergeometric test
-fit1=msigdb.gsea(x=MacArthur.df,genesets=c('C5.BP','C5.CC','C5.MF'), query.population=universe, background='query', method='hypergeometric')
-#As expected, there are many significant overlaps
+#In this example, we will try both the hypergeometric test and weighted enrichment tests, including GSEA and logistic regression, by geneating a toy dataset through simulation of random gene-phenotype associations.
+
+set.seed(123)
+toy=data.frame(Gene=universe,Phenotype='Simulated',Z=rnorm(n,0,1),stringsAsFactors=FALSE)
+
+#Select genes with absolute Z value larger than 3 and separate them into up and down groups based on the sign of Z value, then run the hypergeometric test on both groups against the MacAuther gene sets:
+
+toy.3=toy[abs(toy$Z)>3,]
+toy.3$Direction=ifelse(toy.3$Z > 0, 'Up','Down')
+fit1=GOtest(x=toy.3[,c('Gene','Direction')], go=MAGenes, query.population=universe, background='query', name.x='Toy', name.go='MacArthur', method='hypergeometric')
+
+#As expected, no significant enrichment identified:
+
 head(fit1)
 
-###
-# Example case 2
-#
-#Create a toy example for weighted enrichment using GSEA and logistic regression
-toy=data.frame(Gene=universe,Phenotype='XYZ',Z=rnorm(n,0,1),stringsAsFactors=FALSE)
+\dontrun{
+#Next, we are going to run weighted enrichment tests on the full test dataset by using GSEA or logistic regression. First, run GSEA:
 
-#GSEA
-fit2=msigdb.gsea(x=toy,genesets=c('C5.BP','C5.CC','C5.MF'),query.population=universe, background='query', method='GSEA', permutations=10)
+fit2=GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='GSEA')
 head(fit2)
-#Plot top 10 enriched GSEA terms
-plotGseaEnrTable(GseaTable=fit2[1:10,], x=toy, simplify.func.par=list(maxlen=40))
 
-#logistic regression
-#This is very slow
-fit3=msigdb.gsea(x=toy,genesets=c('C5.BP','C5.CC','C5.MF'),query.population=universe, background='query',method='logitreg')
+#Run logistic regression:
+
+fit3=GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='logitreg')
 head(fit3)
 }
 }
