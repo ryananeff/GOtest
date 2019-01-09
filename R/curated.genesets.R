@@ -1,4 +1,4 @@
-curated.genesets=function(sets=c('MacArthur')){
+curated.genesets=function(sets=c('MacArthur'),return.data.frame=TRUE){
 	gmtfiles=c(MacArthur='MacArthur.gmt',HGNC_universe='HGNC_universe.gmt')
 	if(! all(sets %in% names(gmtfiles))) stop('Invalid sets\n')
 	gmtfiles=gmtfiles[sets]
@@ -16,5 +16,10 @@ curated.genesets=function(sets=c('MacArthur')){
 		}
 	}
 	names(obj$genesets)=obj$geneset.names
+	if(return.data.frame){
+		obj=obj$genesets
+		obj=data.frame(Gene = unlist(obj), Category = rep(names(obj), sapply(obj, length)),stringsAsFactors=FALSE)
+		rownames(obj)=NULL
+	}
 	obj
 }

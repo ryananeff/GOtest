@@ -4,9 +4,10 @@
 \description{
   This function returns curated gene set collections
 }
-\usage{curated.genesets(sets=c('MacArthur'))}
+\usage{curated.genesets(sets=c('MacArthur'), return.data.frame=TRUE)}
 \arguments{
  \item{sets}{A vector of possible set collections. See \code{details}.}
+ \item{return.data.frame}{Logic, return a data.frame (when TRUE) or a list (when FALSE).}
 }
 \details{
 The collection of genes includes:
@@ -17,7 +18,7 @@ The collection of genes includes:
 
 }
 \value{
-A list with three components as retunred by \code{\link[msigdb]{read.gmt}}
+Either a data.frame or a list with three components as retunred by \code{\link[msigdb]{read.gmt}}
 }
 \examples{
 ##not run###
