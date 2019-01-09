@@ -1,0 +1,17 @@
+msigdb.gsea=function(x, query.population=NULL, genesets=c('C2.CP','C5.BP','C5.CC','C5.MF'),
+ background='common', name.x='Input', name.go='MSigDB', method=c('hypergeometric','GSEA','logitreg'),
+ adj="BH", species=c('human','mouse'), ReportOverlap=TRUE, ncores=1, gsea.alpha=1, permutations=ifelse(method=='GSEA',1000,0), iseed=12345){
+	go=msigdb.genesets(sets=genesets,type='symbols',species=species,return.data.frame=TRUE)
+	GOtest(x=x,go=go,query.population=query.population,background=background,name.x=name.x,name.go=name.go,method=method,adj=adj,ReportOverlap=ReportOverlap,ncores=ncores,gsea.alpha=gsea.alpha,permutations=permutations, iseed=iseed)
+}
+merck.gsea=function(x, query.population=NULL, genesets=c('GO CC','GO MF','GO BP','KEGG PATHWAYS','INGENUITY PATHWAYS','GENEGO PATHWAYS'),
+ background='common', name.x='Input', name.go='Merck', method=c('hypergeometric','GSEA','logitreg'),
+ adj="BH", species=c('human','mouse','rat'), ReportOverlap=TRUE, ncores=1, gsea.alpha=1, permutations=ifelse(method=='GSEA',1000,0), iseed=12345){
+	species=match.arg(species)
+	genesets=match.arg(genesets,several.ok=TRUE)
+	gof=file.path(system.file("extdata", package="GOtest"),paste0('merck.db.',species,'.RDS'))
+	go=readRDS(gof)
+	go=go[go[,2] != 'GO CC:chromosome',]
+	go=go[sub('(.+):(.+)','\\1',go[,2]) %in% genesets,]
+	GOtest(x=x,go=go,query.population=query.population,background=background,name.x=name.x,name.go=name.go,method=method,adj=adj,ReportOverlap=ReportOverlap,ncores=ncores,gsea.alpha=gsea.alpha,permutations=permutations, iseed=iseed)
+}
