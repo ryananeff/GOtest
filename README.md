@@ -59,7 +59,7 @@ head(fit2)
 ```
 
 Run logistic regression:
-````
+```
 fit3=GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='logitreg')
 head(fit3)
 ```
