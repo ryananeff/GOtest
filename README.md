@@ -5,7 +5,7 @@ devtools::install_github("mw201608/GOtest")
 
 ## Example usage 1: the hypergeometric test with MSigDB GO/pathway annotations
 
-In this example, we will load pre-installed 23 functional gene sets curated by the MacArthur's Lab (https://github.com/macarthur-lab/gene_lists) and then apply various enrichment analysis methods. 
+In this example, we will load pre-installed 23 functional gene sets curated by the MacArthur's Lab (https://github.com/macarthur-lab/gene_lists) and then apply the hypergeometric test to evaluate the overlap in the MSigDB GO/pathway annotations. 
 ```
 library(GOtest)
 MAGenes=curated.genesets(c('MacArthur'))
