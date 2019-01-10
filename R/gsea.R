@@ -129,11 +129,11 @@ callGSEAfunc=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 12
 		sNoOverlap=unique(Set1[,2])
 		sNoOverlap=sNoOverlap[!sNoOverlap %in% unique(Set11[,2])]
 		ResNoOverlap=NULL
+		phenotype=dat$phenotype[1]
 		if(length(sNoOverlap)>0){
 			ResNoOverlap=data.frame(Term=sNoOverlap,Input=phenotype,Overlap.Size=0,Input.Size=nrow(dat),Category.Size=as.vector(Category.Size[sNoOverlap]),ES=0,NES=0,Pvalue=1,P.adj=1,Elements='',stringsAsFactors=FALSE)
 		}
 		gos=split(Set11[,1],Set11[,2])
-		phenotype=dat$phenotype[1]
 		dat=dat[order(- dat$strength),colnames(dat)!='phenotype'] #we will sort the data by the strength and keep the order from now on
 		isOrdered=TRUE
 		rownames(dat)=dat$tag #used in method 3
@@ -224,7 +224,7 @@ print.gsea=function(x,...){
 no.na=function(x){
 	x[!is.na(x)]
 }
-plotGseaEnrTable=function(GseaTable, x, species=c('human','mouse'), alpha=1, simplify.func=shorten.MSigDB.terms,simplify.func.par=list(),type=c('RES','NES'),col.up='#F8766D',col.down='#00BFC4',...){
+plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse'), alpha=1, simplify.func=shorten.MSigDB.terms, simplify.func.par=list(), type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4', ...){
 	species=match.arg(species)
 	type=match.arg(type)
 	if(type=='NES'){
@@ -248,7 +248,18 @@ plotGseaEnrTable=function(GseaTable, x, species=c('human','mouse'), alpha=1, sim
 		barplot(setNames(v$anes,v$name),col=c(col.down,col.up)[v$u+1],ylab=ylab,xlab=xlab,las=2,...)
 		return(invisible())
 	}
-	go=msigdb.genesets(sets=unique(GseaTable$System),species=species,return.data.frame=TRUE)
+	if(!missing(go)){
+		if((is.data.frame(go) || is.matrix(go)) && ncol(go)==2){
+			go=apply(go,2,as.character)
+		}
+	}else{
+		if(is.character(genesets)){
+			go=msigdb.genesets(sets=genesets,species=species,return.data.frame=TRUE)
+		}else{
+			stop('Error. Either go or genesets must be provided.\n')
+		}
+	}
+	colnames(go)=c('genes','set')
 	GseaTable$simplified_terms=simplify.func(GseaTable[,2],parms=simplify.func.par)
 	GseaTable$NES=sprintf("%.1f",GseaTable$NES)
 	GseaTable$Pvalue=sprintf("%.1E",GseaTable$Pvalue)
@@ -265,7 +276,7 @@ plotGseaEnrTable=function(GseaTable, x, species=c('human','mouse'), alpha=1, sim
 	for(i in 1:nrow(GseaTable)){max(sapply(GseaTable[,2],nchar))
 		axis(side=2, at=nrow(GseaTable)-i+1, labels=GseaTable$simplified_terms[i],las=2,tick=FALSE)
 		axis(side=4, at=nrow(GseaTable)-i+1, labels=paste(GseaTable[i,c('NES','Pvalue','P.adj')],collapse='   '),las=2,tick=FALSE)
-		go1=go[go$set == paste0(GseaTable[i,1],':',GseaTable[i,2]),'genes']
+		go1=go[go[,'set'] == paste0(GseaTable[i,1],':',GseaTable[i,2]),'genes']
 		x1=x[x[,2]==GseaTable[i,3],-2]
 		x1=data.frame(strength=x1[,2],tag=x1[,1] %in% go1,stringsAsFactors=FALSE)
 		Res1=GSEAfunc(x1, alpha=alpha, isOrdered=TRUE)

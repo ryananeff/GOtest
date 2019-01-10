@@ -120,6 +120,8 @@ head(fit1)
 
 fit2=GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='GSEA')
 head(fit2)
+#Again there is no significant enrichment. Let us check the GSEA running enrichment score plot for the top 10 MacArthur terms:
+plotGseaEnrTable(GseaTable=fit2[1:10,], x=toy, go=MAGenes)
 
 #Run logistic regression:
 
