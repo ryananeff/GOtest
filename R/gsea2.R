@@ -1,6 +1,6 @@
 #R script implmenting GSEA (Gene Set Enrichment Analysis)
 #Author: Minghui Wang
-#GSEAfunc
+#GSEAfunc 
 #Input
 #(1) x, a data.frame with at least two columns:
 #	strength: strength of correlation (eg, log[fold change] of differential expression) between gene and trait
@@ -10,14 +10,15 @@
 #
 #Output
 #a list with three elements: ES (enrichment score), indicator (a vector of integers indicating the location of the genes of interest), and RES (a vector of running enrichment scores)
-GSEAfunc1=function(x){
+GSEAfunc=function(x,alpha=1,isOrdered=FALSE){
+	if(!isOrdered) x=x[order(- x$strength),]
 	Nh=sum(x$tag)
 	n=nrow(x)
 	xid=which(x$tag)
 	if(length(xid)<2) return(list(ES=0,indicator=xid,RES=rep(0,n)))
 	f1=iy=rep(0,n)
 	iy[xid]=1
-	f1[xid]=x$strength[xid]
+	f1[xid]=abs(x$strength[xid])^alpha
 	f1=cumsum(f1)
 	f1=f1/f1[n]
 	f2=cumsum(1-iy)/(n-Nh)
@@ -27,18 +28,25 @@ GSEAfunc1=function(x){
 	ES=ifelse(a > -b, a, b)
 	return(list(ES=ES,indicator=xid,RES=RES))
 }
-GSEAfunc3=function(x){
+GSEAfunc2=function(x,alpha=1,isOrdered=FALSE){
 #compute ES as GSEAfunc but much faster (7x)
-#data.frame x have two columns named 'tag' and 'strength'
-#data.frame x must have been ordered by column 'strength' and subsequently the values in column 'strength' has been transformed as (abs(strength))^alpha
-#
+	if(!isOrdered) x=x[order(- x$strength),]
 	Nh=sum(x$tag)
 	n=nrow(x)
 	Nm=n-Nh
 	xid=which(x$tag)
 	if(length(xid)<2) return(0)
 	xNum=xid-c(0,xid[-Nh])-1
-	ys=x$strength[xid]
+	if(alpha == 0){
+		ys=rep(1,Nh)
+	}else if (alpha == 1){
+		ys=abs(x$strength[xid])
+	}else if (alpha == 2){
+		ys=abs(x$strength[xid])
+		ys=ys*ys
+	}else{
+		ys=abs(x$strength[xid])^alpha
+	}
 	ys=ys/sum(ys)
 	f1=cumsum(ys)
 	f2=cumsum(xNum)/Nm
@@ -47,7 +55,7 @@ GSEAfunc3=function(x){
 	b=min(f3-ys)
 	ifelse(a>-b,a,b)
 }
-GSEA3=function(x, go, alpha=1, permutations=1000,ncores=1,iseed=12345){
+GSEA=function(x, go, alpha=1, permutations=1000,ncores=1,iseed=12345){
 #x, a data.frame with first column gene ids and second column phenotype association measures
 #go, a vector of gene ids
 	x1=data.frame(strength=x[,2],tag=x[,1] %in% go,stringsAsFactors=FALSE)
@@ -60,22 +68,22 @@ GSEA3=function(x, go, alpha=1, permutations=1000,ncores=1,iseed=12345){
 	x1=x1[order(- x1$strength),] #we will keep the order from now on
 	isOrdered=TRUE
 	x1$strength=abs(x1$strength) ^ alpha
-	Res=GSEAfunc1(x1)
+	Res=GSEAfunc(x1, alpha=alpha, isOrdered=isOrdered)
 	x1$tag=FALSE #reset for repeated sampling in permutations
-	func1=function(i,x1,ntag){
+	func1=function(i,x1,ntag,alpha,isOrdered=FALSE){
 		x1[sample.int(nrow(x1),ntag,replace=FALSE),2]=TRUE #we will keep the order of column "strength" such that there is no need to sort it again
-		GSEAfunc3(x1)
+		GSEAfunc2(x1,alpha=alpha,isOrdered=isOrdered)
 	}
 	if(ncores>1){
 		cl=makeCluster(ncores)
 		cat('Recruited',ncores,'cores\n')
 		clusterSetRNGStream(cl, iseed)
-		clusterExport(cl,varlist=c('GSEAfunc3'),envir=environment())
-		ESnull=parSapply(cl,1:permutations,func1,x1=x1,ntag=ntag)
+		clusterExport(cl,varlist=c('GSEAfunc2'),envir=environment())
+		ESnull=parSapply(cl,1:permutations,func1,x1=x1,ntag=ntag,alpha=alpha,isOrdered=isOrdered)
 		stopCluster(cl)
 	}else{
 		set.seed(iseed)
-		ESnull=sapply(1:permutations,func1,x1=x1,ntag=ntag)
+		ESnull=sapply(1:permutations,func1,x1=x1,ntag=ntag,alpha=alpha,isOrdered=isOrdered)
 	}
 	if(Res$ES>=0){
 		ESnull=ESnull[ESnull>=0]
@@ -90,7 +98,7 @@ GSEA3=function(x, go, alpha=1, permutations=1000,ncores=1,iseed=12345){
 	Res
 }
 #perform GSEA analysis for a set of GO categoris in phenotype association signatures
-callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 12345){
+callGSEAfunc=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 12345){
 #Set1, usually Gene Ontology
 #Set2, data.frame of phenotype association signatures
 	stopifnot(is.data.frame(Set2))
@@ -103,12 +111,12 @@ callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 1
 	}else{
 		set.seed(iseed)
 	}
-	fun1=function(k,dat1,goSize){
+	fun1=function(k,dat1,gos,alpha,isOrdered=FALSE){
 		dat1$tag=FALSE #method 2
-		sapply(goSize,function(iGO,dat1,n){
-			dat1$tag[sample(n,iGO)]=TRUE #method 2
-			GSEAfunc3(dat1)
-		},dat1=dat1,n=nrow(dat1))
+		sapply(gos,function(iGO,dat1,alpha,isOrdered=FALSE){
+			dat1$tag[sample(nrow(dat1),length(iGO))]=TRUE #method 2
+			GSEAfunc2(dat1,alpha=alpha,isOrdered=isOrdered)
+		},dat1=dat1,alpha=alpha,isOrdered=isOrdered)
 	}
 	for(dat in split(Set2,Set2$phenotype)){ #for each phenotype
 		Set11=Set1[Set1[,1] %in% dat$tag,]
@@ -124,21 +132,21 @@ callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 1
 		}
 		gos=split(Set11[,1],Set11[,2])
 		dat=dat[order(- dat$strength),colnames(dat)!='phenotype'] #we will sort the data by the strength and keep the order from now on
-		dat$strength=abs(dat$strength)^alpha
-		tab2=lapply(gos,function(iGO,dat){
+		isOrdered=TRUE
+		tab2=lapply(gos,function(iGO,dat,alpha,isOrdered=FALSE){
 			Overlap=dat$tag
 			dat$tag = dat$tag %in% iGO
 			ESs=0
-			if(!any(dat$tag)) ESs=GSEAfunc3(dat)
+			if(!any(dat$tag)) ESs=GSEAfunc2(dat,alpha=alpha,isOrdered=isOrdered)
 			Overlap=sort(Overlap[dat$tag])
 			data.frame(Overlap.Size=length(Overlap),Input.Size=nrow(dat),Category.Size=length(iGO),ES=ESs,NES=NA,Pvalue=NA,P.adj=NA,Elements=paste0(Overlap,collapse=';'),stringsAsFactors=FALSE)
-		},dat=dat)
+		},dat=dat,alpha=alpha,isOrdered=isOrdered)
 		tab2=do.call(rbind,tab2)
 		#Compute significance and control for multiple tests by permutations
 		if(ncores>1){
-			ESnull=parLapply(cl,1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			ESnull=parLapply(cl,1:permutations,fun1,dat1=dat,gos=gos,alpha=alpha,isOrdered=isOrdered)
 		}else{
-			ESnull=lapply(1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			ESnull=lapply(1:permutations,fun1,dat1=dat,gos=gos,alpha=alpha,isOrdered=isOrdered)
 		}
 		ESnull=do.call(cbind,ESnull) #number of GO terms x number of permutations
 		NESnull=vector('list',nrow(tab2))
@@ -180,4 +188,3 @@ callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 1
 	rownames(Res)=NULL
 	Res
 }
-
