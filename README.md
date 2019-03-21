@@ -1,7 +1,15 @@
 # GOtest: Gene Ontology and Set Enrichment Test
 
+## Dependency
+R package `msigdb` is required to run this tool. You can install it from github by
+```
+devtools::install_github("mw201608/msigdb")
+```
+
 ## Installation
+```
 devtools::install_github("mw201608/GOtest")
+```
 
 ## Example usage 1: the hypergeometric test with MSigDB GO/pathway annotations
 
