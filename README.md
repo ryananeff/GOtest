@@ -62,7 +62,7 @@ head(fit1)
 
 Next, we are going to run weighted enrichment tests on the full test dataset by using GSEA or logistic regression. First, run GSEA:
 ```
-fit2 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='GSEA')
+fit2 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', query.population=universe, background='query', method='GSEA')
 head(fit2)
 ```
 Again there is no significant enrichment. Let us check the GSEA running enrichment score plot for the top 10 MacArthur terms:
