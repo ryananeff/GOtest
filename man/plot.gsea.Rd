@@ -28,7 +28,7 @@ See function \code{GSEA} for object \code{gsea}.
 #example usage
 #create a random data set
 n=10000
-x=data.frame(ID=paste0('Gene',1:n),strength=sort(rnorm(n,0,1)),stringsAsFactors=FALSE)
-fit1=GSEA(x=x,go=paste0('Gene',sample(n,100)))
+x=data.frame(ID=paste0('Gene',1:n), strength=sort(rnorm(n,0,1)), stringsAsFactors=FALSE)
+fit1=GSEA(x=x, go=paste0('Gene',sample(n,100)))
 plot(fit1)
 }

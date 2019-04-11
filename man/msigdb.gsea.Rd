@@ -11,8 +11,8 @@ msigdb.gsea(x, query.population=NULL, genesets=c('C2.CP','C5.BP','C5.CC','C5.MF'
  method=c('hypergeometric','GSEA','logitreg'), adj="BH", species=c('human','mouse'),
  ReportOverlap=TRUE, ncores=1, gsea.alpha=1,
  permutations=ifelse(method=='GSEA',1000,0), iseed=12345)
-merck.gsea(x, query.population=NULL, genesets=c('GO CC', 'GO MF', 'GO BP','KEGG PATHWAYS', 
- 'INGENUITY PATHWAYS', 'GENEGO PATHWAYS'),
+merck.gsea(x, query.population=NULL, genesets=c('GO CC', 'GO MF', 'GO BP',
+ 'KEGG PATHWAYS', 'INGENUITY PATHWAYS', 'GENEGO PATHWAYS'),
  background='common', name.x='Input', name.go='Merck',
  method=c('hypergeometric','GSEA','logitreg'), adj="BH", species=c('human','mouse','rat'),
  ReportOverlap=TRUE, ncores=1, gsea.alpha=1,
@@ -46,30 +46,37 @@ See output of function \code{GOtest}.
 \examples{
 ###Example usage 2: weighted enrichment tests
 
-#We will again make use of the MacArthur gene set and the gene universe of HGNC approved symbols, so make sure they have been loaded as in Example 1.
+#We will again make use of the MacArthur gene set and the gene universe of HGNC approved symbols,
+# so make sure they have been loaded as in Example 1.
 
 library(GOtest)
 MAGenes=curated.genesets(c('MacArthur'))
 universe=curated.genesets(c('HGNC_universe'))$Gene
 (n=length(universe))
 
-#In this example, we will try both the hypergeometric test and weighted enrichment tests, including GSEA and logistic regression, by geneating a toy dataset through simulation of random gene-phenotype associations.
+#In this example, we will try both the hypergeometric test and weighted enrichment tests, 
+#including GSEA and logistic regression, by geneating a toy dataset
+#through simulation of random gene-phenotype associations.
 
 set.seed(123)
 toy=data.frame(Gene=universe,Phenotype='Simulated',Z=rnorm(n,0,1),stringsAsFactors=FALSE)
 
-#Select genes with absolute Z value larger than 3 and separate them into up and down groups based on the sign of Z value, then run the hypergeometric test on both groups against the MacAuther gene sets:
+#Select genes with absolute Z value larger than 3 and separate them into up and down groups 
+#based on the sign of Z value, then run the hypergeometric test on both groups
+#against the MacAuther gene sets:
 
 toy.3=toy[abs(toy$Z)>3,]
 toy.3$Direction=ifelse(toy.3$Z > 0, 'Up','Down')
-fit1=GOtest(x=toy.3[,c('Gene','Direction')], go=MAGenes, query.population=universe, background='query', name.x='Toy', name.go='MacArthur', method='hypergeometric')
+fit1=GOtest(x=toy.3[,c('Gene','Direction')], go=MAGenes, query.population=universe,
+	background='query', name.x='Toy', name.go='MacArthur', method='hypergeometric')
 
 #As expected, no significant enrichment identified:
 
 head(fit1)
 
 \dontrun{
-#Next, we are going to run weighted enrichment tests on the full test dataset by using GSEA or logistic regression. First, run GSEA:
+#Next, we are going to run weighted enrichment tests on the full test dataset 
+#by using GSEA or logistic regression. First, run GSEA:
 
 fit2=GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='GSEA')
 head(fit2)

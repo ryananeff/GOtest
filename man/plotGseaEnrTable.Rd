@@ -16,7 +16,7 @@ plotGseaEnrTable(GseaTable, x, go, genesets, species=c('human','mouse'),
  \item{genesets}{a vector of gene annotation set names. See \code{Details}.}
  \item{species}{Specifying the species for the input gene signatures. Only used when \code{GseaTable} is computed from \code{\link{msigdb.gsea}}.}
  \item{alpha}{power to scale the weights: 0 (unweighted = Kolmogorov-Smirnov), 1 (weighted), and 2 or larger (over-weighted)}
- \item{simplify.func}{function to convert MSigDB terms to a simplified form. Set simplify.func=I if the terms should be kept unchanged. Default \code{\link{shorten.MSigDB.terms}}.}
+ \item{simplify.func}{function to convert MSigDB terms to a simplified form. Default \code{\link{shorten.MSigDB.terms}}.}
  \item{simplify.func.par}{a named list to pass parameters to \code{simplify.func}.}
  \item{type}{content type to be plotted, either \code{RES} (running enrichment score) or \code{NES} (normalized enrichment score).}
  \item{col.up}{color for positive score.}
@@ -41,7 +41,8 @@ n=length(universe)
 toy=data.frame(Gene=universe,Phenotype='XYZ',Z=rnorm(n,0,1),stringsAsFactors=FALSE)
 
 #GSEA against MSigDB gene ontology biological process (C5.BP). This may take a long time to run.
-fit2=msigdb.gsea(x=toy, genesets=c('C5.BP'), query.population=universe, background='query', method='GSEA', permutations=100)
+fit2=msigdb.gsea(x=toy, genesets=c('C5.BP'), query.population=universe,
+	background='query', method='GSEA', permutations=100)
 head(fit2)
 #Plot the GSEA running enrichment score for the top 10 GSEA terms
 plotGseaEnrTable(GseaTable=fit2[1:10,], x=toy, genesets=c('C5.BP'))

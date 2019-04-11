@@ -27,21 +27,23 @@ no.na=function(x){
 plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse'), alpha=1, simplify.func=shorten.MSigDB.terms, simplify.func.par=list(), type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4', ...){
 	species=match.arg(species)
 	type=match.arg(type)
+	if(ncol(GseaTable) < 11) stop('Please provide unmodified output from GOtest/msigdb.gsea\n')
 	if(type=='NES'){
-		v=data.frame(nes=GseaTable$NES,name=simplify.func(GseaTable$MSigDB,parms=simplify.func.par),stringsAsFactors=FALSE)
+		v=data.frame(nes=GseaTable$NES,name=simplify.func(GseaTable[,2],parms=simplify.func.par),stringsAsFactors=FALSE)
 		v$u = v$nes > 0
 		v$anes=abs(v$nes)
 		v=v[order(v$u,-v$anes),]
 		d <- setNames(v$anes,v$name)
 		parms=list(...)
 		horiz=FALSE
+		NLetters=sapply(v$name,nchar)+countCapitalLetters(v$name)*0.4
 		if((!is.null(parms$horiz)) && parms$horiz==TRUE) horiz=TRUE
 		if(horiz){
-			par(mar=c(4,max(sapply(v$name,nchar))*0.45,0.5,0.5))
+			par(mar=c(4,max(NLetters)*0.45,0.5,0.5))
 			xlab='Absolute NES'
 			ylab=''
 		}else{
-			par(mar=c(max(sapply(v$name,nchar))*0.45,4,0.5,0.5))
+			par(mar=c(max(NLetters)*0.45,4,0.5,0.5))
 			xlab=''
 			ylab='Absolute NES'
 		}
@@ -52,12 +54,14 @@ plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse')
 		if((is.data.frame(go) || is.matrix(go)) && ncol(go)==2){
 			go=apply(go,2,as.character)
 		}
+		addcomma=FALSE
 	}else{
 		if(is.character(genesets)){
 			go=msigdb.genesets(sets=genesets,species=species,return.data.frame=TRUE)
 		}else{
 			stop('Error. Either go or genesets must be provided.\n')
 		}
+		addcomma=TRUE
 	}
 	colnames(go)=c('genes','set')
 	GseaTable$simplified_terms=simplify.func(GseaTable[,2],parms=simplify.func.par)
@@ -68,26 +72,43 @@ plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse')
 	if(length(unique(x[,2])) > 1){
 		n11=as.vector(table(x[,2]))
 		if(!all(n11==n11[1])) stop('Error: input enrichment table contains multiple phenotypes/groups which have different gene background sizes. Please provide results from a single phenotype/group analysis or ensure they have common gene background.\n')
+	}else{
+		n11=nrow(x)
 	}
 	x=x[order(x[,2],-x[,3]),]
-	par(mar=c(3,max(sapply(GseaTable$simplified_terms,nchar))*0.45,0.5,10))
-	plot(c(1,nrow(x)),c(1,nrow(GseaTable)),type='n',bty='n',xlab='',ylab='',yaxt='n',...)
+	NLetters=sapply(GseaTable$simplified_terms,nchar)+countCapitalLetters(GseaTable$simplified_terms)*0.4
+	par(mar=c(3,max(NLetters)*0.45,0,10))
+	plot(c(1,n11[1]),c(1,nrow(GseaTable)+0.5),type='n',bty='n',xlab='',ylab='',yaxt='n',...)
 	par(yaxt='s')
-	for(i in 1:nrow(GseaTable)){max(sapply(GseaTable[,2],nchar))
-		axis(side=2, at=nrow(GseaTable)-i+1, labels=GseaTable$simplified_terms[i],las=2,tick=FALSE)
-		axis(side=4, at=nrow(GseaTable)-i+1, labels=paste(GseaTable[i,c('NES','Pvalue','P.adj')],collapse='   '),las=2,tick=FALSE)
-		go1=go[go[,'set'] == paste0(GseaTable[i,1],':',GseaTable[i,2]),'genes']
+	Res1=vector(mode = "list", length = nrow(GseaTable))
+	maxres=0
+	for(i in 1:nrow(GseaTable)){
+		s1=ifelse(addcomma,paste0(GseaTable[i,1],':',GseaTable[i,2]),GseaTable[i,2])
+		go1=go[go[,'set'] == s1,'genes']
 		x1=x[x[,2]==GseaTable[i,3],-2]
 		x1=data.frame(strength=x1[,2],tag=x1[,1] %in% go1,stringsAsFactors=FALSE)
-		Res1=GSEAfunc(x1, alpha=alpha, isOrdered=TRUE)
-		for(j in Res1$indicator) lines(c(j,j),c(nrow(GseaTable)-i+1,nrow(GseaTable)-i+1+Res1$RES[j]),col=ifelse(Res1$RES[j]>0,col.up,col.down))
+		Res1[[i]]=GSEAfunc(x1, alpha=alpha, isOrdered=TRUE)
+		a=max(abs(Res1[[i]]$RES))
+		maxres=ifelse(maxres>=a,maxres,a)
+	}
+	for(i in 1:nrow(GseaTable)){
+		axis(side=2, at=nrow(GseaTable)-i+1, labels=GseaTable$simplified_terms[i],las=2,tick=FALSE)
+		axis(side=4, at=nrow(GseaTable)-i+1, labels=paste(GseaTable[i,c('NES','Pvalue','P.adj')],collapse='   '),las=2,tick=FALSE)
+		Res11=Res1[[i]]
+		Res11$RES=Res11$RES/maxres*0.5
+		for(j in Res11$indicator) lines(c(j,j),c(nrow(GseaTable)-i+1,nrow(GseaTable)-i+1+Res11$RES[j]),col=ifelse(Res11$RES[j]>0,col.up,col.down))
 	}
 }
-shorten.MSigDB.terms=function(x,maxlen=32,Tolower=TRUE,parms=list()){
+countCapitalLetters=function(x){
+	sapply(regmatches(x, gregexpr("[A-Z]", x, perl=TRUE)), length)
+}
+shorten.MSigDB.terms=function(x,maxlen=32,Tolower=TRUE,unchange=FALSE,parms=list()){
 	if(length(parms)>0){
 		if(!is.null(parms$Tolower)) Tolower=parms$Tolower
 		if(!is.null(parms$maxlen)) maxlen=parms$maxlen
+		if(!is.null(parms$unchange)) unchange=parms$unchange
 	}
+	if(unchange) return(x)
 	if(Tolower) x=tolower(x)
 	x=gsub('_',' ',x)
 	x=sub('^go ','',x)
