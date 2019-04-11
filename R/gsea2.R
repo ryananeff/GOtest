@@ -137,7 +137,7 @@ callGSEAfunc=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 12
 			Overlap=dat$tag
 			dat$tag = dat$tag %in% iGO
 			ESs=0
-			if(!any(dat$tag)) ESs=GSEAfunc2(dat,alpha=alpha,isOrdered=isOrdered)
+			if(any(dat$tag)) ESs=GSEAfunc2(dat,alpha=alpha,isOrdered=isOrdered)
 			Overlap=sort(Overlap[dat$tag])
 			data.frame(Overlap.Size=length(Overlap),Input.Size=nrow(dat),Category.Size=length(iGO),ES=ESs,NES=NA,Pvalue=NA,P.adj=NA,Elements=paste0(Overlap,collapse=';'),stringsAsFactors=FALSE)
 		},dat=dat,alpha=alpha,isOrdered=isOrdered)

@@ -1,9 +1,17 @@
 # GOtest: Gene Ontology and Set Enrichment Test
 
-## Installation
-devtools::install_github("mw201608/GOtest")
+## Dependency
+R package `msigdb` is required to run this tool. You can install it from github by
+```
+devtools::install_github("mw201608/msigdb")
+```
 
-## Example usage 1: the hypergeometric test with MSigDB GO/pathway annotations
+## Installation
+```
+devtools::install_github("mw201608/GOtest")
+```
+
+## Example usage 1: hypergeometric test with MSigDB GO/pathway annotations
 
 In this example, we will load pre-installed 23 functional gene sets curated by the MacArthur's Lab (https://github.com/macarthur-lab/gene_lists) and then apply the hypergeometric test to evaluate the overlap in the MSigDB GO/pathway annotations. 
 ```
@@ -54,7 +62,7 @@ head(fit1)
 
 Next, we are going to run weighted enrichment tests on the full test dataset by using GSEA or logistic regression. First, run GSEA:
 ```
-fit2 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='GSEA')
+fit2 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', query.population=universe, background='query', method='GSEA')
 head(fit2)
 ```
 Again there is no significant enrichment. Let us check the GSEA running enrichment score plot for the top 10 MacArthur terms:
@@ -65,6 +73,6 @@ plotGseaEnrTable(GseaTable=fit2[1:10,], x=toy, go=MAGenes)
 
 Run logistic regression:
 ```
-fit3 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', method='logitreg')
+fit3 = GOtest(x=toy, go=MAGenes, name.x='Toy', name.go='MacArthur', query.population=universe, background='query', method='logitreg')
 head(fit3)
 ```
