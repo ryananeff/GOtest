@@ -78,7 +78,7 @@ plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse')
 	x=x[order(x[,2],-x[,3]),]
 	NLetters=sapply(GseaTable$simplified_terms,nchar)+countCapitalLetters(GseaTable$simplified_terms)*0.4
 	par(mar=c(3,max(NLetters)*0.45,0,10))
-	plot(c(1,n11[1]),c(1,nrow(GseaTable)+0.5),type='n',bty='n',xlab='',ylab='',yaxt='n',...)
+	plot(c(1,n11[1]),c(0,nrow(GseaTable)+0.5),type='n',bty='n',xlab='',ylab='',yaxt='n',...)
 	par(yaxt='s')
 	Res1=vector(mode = "list", length = nrow(GseaTable))
 	maxres=0
