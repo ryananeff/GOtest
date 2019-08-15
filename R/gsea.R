@@ -30,7 +30,7 @@ GSEAfunc1=function(x){
 GSEAfunc3=function(x){
 #compute ES as GSEAfunc but much faster (7x)
 #data.frame x have two columns named 'tag' and 'strength'
-#data.frame x must have been ordered by column 'strength' and subsequently the values in column 'strength' has been transformed as (abs(strength))^alpha
+#data.frame x must have been ordered by column 'strength' and subsequently the values in column 'strength' have been transformed as (abs(strength))^alpha
 #
 	Nh=sum(x$tag)
 	n=nrow(x)
@@ -39,6 +39,23 @@ GSEAfunc3=function(x){
 	if(length(xid)<2) return(0)
 	xNum=xid-c(0,xid[-Nh])-1
 	ys=x$strength[xid]
+	ys=ys/sum(ys)
+	f1=cumsum(ys)
+	f2=cumsum(xNum)/Nm
+	f3=f1-f2
+	a=max(f3)
+	b=min(f3-ys)
+	ifelse(a>-b,a,b)
+}
+GSEAfunc4=function(n,strength,xid){
+#compute ES as GSEAfunc but much faster (7x)
+#strength is ordered and its values have been transformed as (abs(strength))^alpha
+#
+	Nh=length(xid)
+	Nm=n-Nh
+	if(length(xid)<2) return(0)
+	xNum=xid-c(0,xid[-Nh])-1
+	ys=strength[xid]
 	ys=ys/sum(ys)
 	f1=cumsum(ys)
 	f2=cumsum(xNum)/Nm
@@ -110,6 +127,22 @@ callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 1
 			GSEAfunc3(dat1)
 		},dat1=dat1,n=nrow(dat1))
 	}
+	fun2=function(k,dat1,gos,goid,ngoid,npop){
+		r1=rep(0,npop)
+		r1[goid]=sample(npop,ngoid,replace=FALSE)
+		dat1$tag=FALSE
+		sapply(gos,function(iGO,dat1,r1){
+			dat1$tag[r1[iGO]]=TRUE
+			GSEAfunc3(dat1)
+		},dat1=dat1,r1=r1)
+	}
+	fun3=function(k,dat1,gos,goid,ngoid,npop){
+		r1=rep(0,npop)
+		r1[goid]=sample(npop,ngoid,replace=FALSE)
+		sapply(gos,function(iGO,npop,strength,r1){
+			GSEAfunc4(n=npop,strength=strength,xid=sort(r1[iGO]))
+		},npop=npop,strength=dat1$strength,r1=r1)
+	}
 	for(dat in split(Set2,Set2$phenotype)){ #for each phenotype
 		Set11=Set1[Set1[,1] %in% dat$tag,]
 		if(nrow(Set11)==0) stop('No common elements between sets\n')
@@ -129,16 +162,23 @@ callGSEAfunc3=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 1
 			Overlap=dat$tag
 			dat$tag = dat$tag %in% iGO
 			ESs=0
-			if(!any(dat$tag)) ESs=GSEAfunc3(dat)
+			if(any(dat$tag)) ESs=GSEAfunc3(dat)
 			Overlap=sort(Overlap[dat$tag])
 			data.frame(Overlap.Size=length(Overlap),Input.Size=nrow(dat),Category.Size=length(iGO),ES=ESs,NES=NA,Pvalue=NA,P.adj=NA,Elements=paste0(Overlap,collapse=';'),stringsAsFactors=FALSE)
 		},dat=dat)
 		tab2=do.call(rbind,tab2)
 		#Compute significance and control for multiple tests by permutations
+		Set11idx=match(Set11[,1],dat$tag)
+		gos=split(Set11idx,Set11[,2])
+		goid=unique(Set11idx)
+		ngoid=length(goid)
+		npop=nrow(dat)
 		if(ncores>1){
-			ESnull=parLapply(cl,1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			#ESnull=parLapply(cl,1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			ESnull=parLapply(cl,1:permutations,fun3,dat1=dat,gos=gos,goid=goid,ngoid=ngoid,npop=npop)
 		}else{
-			ESnull=lapply(1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			#ESnull=lapply(1:permutations,fun1,dat1=dat,goSize=sapply(gos,length))
+			ESnull=lapply(1:permutations,fun3,dat1=dat,gos=gos,goid=goid,ngoid=ngoid,npop=npop)
 		}
 		ESnull=do.call(cbind,ESnull) #number of GO terms x number of permutations
 		NESnull=vector('list',nrow(tab2))
