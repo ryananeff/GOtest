@@ -55,6 +55,7 @@ plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse')
 			go=apply(go,2,as.character)
 		}
 		addcomma=FALSE
+		if(any(paste(GseaTable[,1],GseaTable[,2],sep=':') %in% go[,2])) addcomma=TRUE #a temporary solution; need a better way to check it
 	}else{
 		if(is.character(genesets)){
 			go=msigdb.genesets(sets=genesets,species=species,return.data.frame=TRUE)
