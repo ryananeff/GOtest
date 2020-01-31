@@ -24,7 +24,7 @@ print.gsea=function(x,...){
 no.na=function(x){
 	x[!is.na(x)]
 }
-plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse'), alpha=1, simplify.func=shorten.MSigDB.terms, simplify.func.par=list(), type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4', ...){
+plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse'), alpha=1, simplify.func=shorten.MSigDB.terms, simplify.func.par=list(), type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4',mar=NULL, oma=NULL, ...){
 	species=match.arg(species)
 	type=match.arg(type)
 	if(ncol(GseaTable) < 11) stop('Please provide unmodified output from GOtest/msigdb.gsea\n')
@@ -78,7 +78,9 @@ plotGseaEnrTable=function(GseaTable, x, go, genesets, species=c('human','mouse')
 	}
 	x=x[order(x[,2],-x[,3]),]
 	NLetters=sapply(GseaTable$simplified_terms,nchar)+countCapitalLetters(GseaTable$simplified_terms)*0.4
-	par(mar=c(3,max(NLetters)*0.45,0,10))
+	if(is.null(mar)) mar=c(3,max(NLetters)*0.45,ifelse(any(names(list(...))=='main'),1.5,0),11)
+	if(is.null(oma)) oma=c(0,0,0.2,0.2)
+	par(mar=mar,oma=oma)
 	plot(c(1,n11[1]),c(0,nrow(GseaTable)+0.5),type='n',bty='n',xlab='',ylab='',yaxt='n',...)
 	par(yaxt='s')
 	Res1=vector(mode = "list", length = nrow(GseaTable))

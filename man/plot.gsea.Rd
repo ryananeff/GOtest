@@ -8,7 +8,7 @@
 }
 \usage{
 \method{plot}{gsea}(x, xlab='Rank', ylab='Running Enrichment Score', col.line='green', 
-	col.indicator='red', indicator.bar=c('score','fixed'), ...)
+	col.indicator='red', indicator.bar=c('score','fixed'), mar=NULL, oma=NULL, ...)
 \method{print}{gsea}(x, ...)
 }
 \arguments{
@@ -18,6 +18,8 @@
  \item{col.line}{color for running score line.}
  \item{col.indicator}{color for gene tag.}
  \item{indicator.bar}{denote whether the indicator bar should show the running score or a fixed height.}
+ \item{mar}{a numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot.}
+ \item{oma}{a vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text..}
  \item{...}{additional parameters for \code{\link{plot}}.}
 }
 \details{
