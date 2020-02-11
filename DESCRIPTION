@@ -1,8 +1,8 @@
 Package: GOtest
 Type: Package
 Title: Gene Ontology and Set Enrichment Test
-Version: 1.0.7
-Date: 2020-01-31
+Version: 1.0.8
+Date: 2020-02-11
 Author: Minghui Wang
 Maintainer: Minghui Wang <m.h.wang@live.com>
 Description: Multiple function utilities were implemented to perform set enrichment analysis such as gene ontology enrichment by making use of predefined annotaion collections such as MSigDB.

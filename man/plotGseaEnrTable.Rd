@@ -7,7 +7,7 @@
 \usage{
 plotGseaEnrTable(GseaTable, x, go, genesets, species=c('human','mouse'),
  alpha=1, simplify.func=shorten.MSigDB.terms, simplify.func.par=list(),
- type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4', ...)
+ type=c('RES','NES'), col.up='#F8766D', col.down='#00BFC4', mar=NULL, oma=NULL, ...)
 }
 \arguments{
  \item{GseaTable}{a data.frame, must be (usually a subset of) the GSEA output from \code{\link{msigdb.gsea}} or \code{\link{GOtest}}.}
@@ -21,6 +21,8 @@ plotGseaEnrTable(GseaTable, x, go, genesets, species=c('human','mouse'),
  \item{type}{content type to be plotted, either \code{RES} (running enrichment score) or \code{NES} (normalized enrichment score).}
  \item{col.up}{color for positive score.}
  \item{col.down}{color for negative score.}
+ \item{mar}{a numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot.}
+ \item{oma}{a vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text..}
  \item{...}{additional arguments used for \code{\link{plot}}.}
 }
 \details{
