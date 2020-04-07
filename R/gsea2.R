@@ -150,6 +150,7 @@ callGSEAfunc=function(Set1, Set2, alpha=1, permutations=1000,ncores=1,iseed = 12
 		}
 		ESnull=do.call(cbind,ESnull) #number of GO terms x number of permutations
 		NESnull=vector('list',nrow(tab2))
+		tab2$ES[is.na(tab2$ES)]=0
 		for(i in 1:nrow(tab2)){
 			if(tab2$ES[i]==0){
 				NESnull[[i]]=0
